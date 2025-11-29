@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-// ===== TC-001: ELEMENT SÜRÜKLEME BAŞLATMA ===== //
+// ===== ELEMENT SÜRÜKLEME BAŞLATMA ===== //
 
 function initializeDragElements(elements) {
     elements.forEach(element => {
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-// ===== TC-002: DROP ZONE ALGILAMA ===== //
+// ===== DROP ZONE ALGILAMA ===== //
 
 function initializeDropZone(canvas) {
 
@@ -87,7 +87,65 @@ function initializeDropZone(canvas) {
 
 
 
-// ===== TC-003: ELEMENT YERLEŞTIRME VE POZİSYON HESAPLAMA ===== //
+// ===== TAŞMA KONTROL YAPISI ===== //
+
+function adjustPositionToFit(x, y, width, height, canvasWidth) {
+    // Element sağ taraftan taşacak mı kontrol et
+    console.log('Pozisyon kontrolü:', { x, y, width, height, canvasWidth, willOverflow: x + width > canvasWidth });
+
+    if (x + width > canvasWidth) {
+        // Önce sola kaydırmayı dene
+        let newX = canvasWidth - width;
+
+        // Grid'e hizala
+        if (GRID_SNAP) {
+            newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
+        }
+
+        // Negatif pozisyon olmaması için kontrol
+        if (newX < 0) {
+            newX = 0;
+        }
+
+        console.log('Sağdan taştı, sola kaydırılıyor:', newX);
+
+        // Sola kaydırınca çakışma var mı kontrol et
+        if (!checkCollision(newX, y, width, height)) {
+            // Çakışma yok, sola kaydırılmış pozisyonu kullan
+            console.log('Sola kaydırıldı, çakışma yok');
+            return { x: newX, y: y };
+        } else {
+            // Sola kaydırınca da çakışma var, bir sonraki satıra geç
+            // Yeni satır pozisyonunu bul (mevcut y + grid hizalaması ile aşağıya in)
+            let newY = y + height + GRID_SIZE;
+
+            if (GRID_SNAP) {
+                newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+            }
+
+            // Soldan başlat
+            newX = 0;
+
+            console.log('Çakışma var, alt satıra geçiliyor:', { newX, newY });
+
+            // Yeni pozisyonda da çakışma kontrolü yap
+            while (checkCollision(newX, newY, width, height)) {
+                newY += height + GRID_SIZE;
+                if (GRID_SNAP) {
+                    newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+                }
+            }
+
+            return { x: newX, y: newY };
+        }
+    }
+
+    return { x: x, y: y };
+}
+
+
+
+// ===== ELEMENT YERLEŞTIRME VE POZİSYON HESAPLAMA ===== //
 
 function handleDrop(e) {
     const type = e.dataTransfer.getData('text/plain');
@@ -106,9 +164,13 @@ function handleDrop(e) {
 
     const size = DEFAULT_SIZES[type];
 
-    let width = size.width === '100%' ? canvasRect.width : size.width;
+    let width = size.width === '100%' ? canvas.clientWidth : size.width;
     let height = size.height;
 
+    // Overflow kontrolü ve otomatik pozisyon düzeltme
+    const adjustedPosition = adjustPositionToFit(mouseX, mouseY, width, height, canvas.clientWidth);
+    mouseX = adjustedPosition.x;
+    mouseY = adjustedPosition.y;
 
     if (checkCollision(mouseX, mouseY, width, height)) {
         alert('Bu pozisyonda başka bir element var!');
