@@ -110,11 +110,9 @@ function handleDrop(e) {
     let height = size.height;
 
 
-    if (type !== 'header' && type !== 'footer') {
-        if (checkCollision(mouseX, mouseY, width, height)) {
-            alert('Bu pozisyonda başka bir element var!');
-            return;
-        }
+    if (checkCollision(mouseX, mouseY, width, height)) {
+        alert('Bu pozisyonda başka bir element var!');
+        return;
     }
 
     createElement(type, mouseX, mouseY, width, height);
@@ -131,9 +129,6 @@ function checkCollision(x, y, width, height, ignoreElement = null) {
 
     for (let element of elements) {
         if (element === ignoreElement) continue;
-
-        if (element.dataset.type === 'header' ||
-            element.dataset.type === 'footer') continue;
 
         const rect = element.getBoundingClientRect();
         const canvasRect = canvas.getBoundingClientRect();
