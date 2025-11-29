@@ -28,7 +28,9 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('Elements:', elements);
 });
 
-// TC-001: ELEMENT SÜRÜKLEME BAŞLATMA
+
+
+// ===== TC-001: ELEMENT SÜRÜKLEME BAŞLATMA ===== //
 
 function initializeDragElements(elements) {
     elements.forEach(element => {
@@ -61,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-// TC-002: DROP ZONE ALGILAMA
+// ===== TC-002: DROP ZONE ALGILAMA ===== //
 
 function initializeDropZone(canvas) {
 
@@ -79,9 +81,77 @@ function initializeDropZone(canvas) {
         e.preventDefault();
         canvas.classList.remove('drag-over');
 
-        const type = e.dataTransfer.getData('text/plain');
-        console.log('Bırakılan element tipi:', type);
-        console.log('Mouse X:', e.clientX);
-        console.log('Mouse Y:', e.clientY);
+        handleDrop(e)
     });
+}
+
+
+
+// ===== TC-003: ELEMENT YERLEŞTIRME VE POZİSYON HESAPLAMA ===== //
+
+function handleDrop(e) {
+    const type = e.dataTransfer.getData('text/plain');
+
+    const canvas = document.getElementById('canvas');
+    const canvasRect = canvas.getBoundingClientRect();
+
+
+    let mouseX = e.clientX - canvasRect.left;
+    let mouseY = e.clientY - canvasRect.top;
+
+    if (GRID_SNAP) {
+        mouseX = Math.round(mouseX / GRID_SIZE) * GRID_SIZE;
+        mouseY = Math.round(mouseY / GRID_SIZE) * GRID_SIZE;
+    }
+
+    const size = DEFAULT_SIZES[type];
+
+    let width = size.width === '100%' ? canvasRect.width : size.width;
+    let height = size.height;
+
+
+    if (type !== 'header' && type !== 'footer') {
+        if (checkCollision(mouseX, mouseY, width, height)) {
+            alert('Bu pozisyonda başka bir element var!');
+            return;
+        }
+    }
+
+    console.log('Element', {
+        type: type,
+        x: mouseX,
+        y: mouseY,
+        width: width,
+        height: height
+    });
+}
+
+
+
+// ===== ÇAKIŞMA KONTROLÜ ===== //
+
+function checkCollision(x, y, width, height, ignoreElement = null) {
+    const canvas = document.getElementById('canvas');
+    const elements = canvas.querySelectorAll('.canvas-element');
+
+    for (let element of elements) {
+        if (element === ignoreElement) continue;
+
+        if (element.dataset.type === 'header' ||
+            element.dataset.type === 'footer') continue;
+
+        const rect = element.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+
+        const elX = rect.left - canvasRect.left;
+        const elY = rect.top - canvasRect.top;
+        const elWidth = rect.width;
+        const elHeight = rect.height;
+
+        if (x < elX + elWidth && x + width > elX && y < elY + elHeight && y + height > elY) {
+            return true;
+        }
+    }
+
+    return false;
 }
