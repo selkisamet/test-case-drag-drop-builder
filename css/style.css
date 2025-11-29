@@ -132,4 +132,41 @@ small {
 }
 .export-btn:hover {
   background: rgb(60.5577689243, 139.4422310757, 63.7450199203);
+}
+
+.canvas-element {
+  position: absolute;
+  background-color: #3498db;
+  color: white;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  padding: 1rem;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s ease;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+.canvas-element:hover {
+  border-color: #2980b9;
+}
+.canvas-element[data-type=header] {
+  background-color: #9AA8C1;
+}
+.canvas-element[data-type=slider] {
+  background-color: #6F46E1;
+}
+.canvas-element[data-type=card] {
+  background-color: #267AC4;
+}
+.canvas-element[data-type=text-content] {
+  background-color: #8FCC32;
+}
+.canvas-element[data-type=footer] {
+  background-color: #253E6A;
 }/*# sourceMappingURL=style.css.map */

@@ -117,13 +117,8 @@ function handleDrop(e) {
         }
     }
 
-    console.log('Element', {
-        type: type,
-        x: mouseX,
-        y: mouseY,
-        width: width,
-        height: height
-    });
+    createElement(type, mouseX, mouseY, width, height);
+    updateElementCount();
 }
 
 
@@ -154,4 +149,114 @@ function checkCollision(x, y, width, height, ignoreElement = null) {
     }
 
     return false;
+}
+
+
+
+// ===== ELEMENT OLUŞTURMA ===== //
+
+function createElement(type, x, y, width, height) {
+    const canvas = document.getElementById('canvas');
+
+    elementCounter++;
+    const elementId = `elem_${type}_${String(elementCounter).padStart(3, '0')}`;
+
+    const element = document.createElement('div');
+    element.className = 'canvas-element';
+    element.id = elementId;
+    element.dataset.type = type;
+    element.textContent = type.toUpperCase();
+
+    if (type === 'header') {
+        element.style.position = 'absolute';
+        element.style.top = '0px';
+        element.style.left = '0px';
+        element.style.width = '100%';
+        element.style.height = height + 'px';
+    }
+    else if (type === 'footer') {
+        element.style.position = 'absolute';
+        element.style.bottom = '0px';
+        element.style.left = '0px';
+        element.style.width = '100%';
+        element.style.height = height + 'px';
+    }
+    else {
+        element.style.position = 'absolute';
+        element.style.left = x + 'px';
+        element.style.top = y + 'px';
+        element.style.width = width + 'px';
+        element.style.height = height + 'px';
+    }
+
+    element.style.zIndex = canvasData.length + 1;
+
+    canvas.appendChild(element);
+
+    const elementData = {
+        id: elementId,
+        type: type,
+        position: {
+            x: type === 'header' || type === 'footer' ? 0 : x,
+            y: type === 'header' ? 0 : (type === 'footer' ? 'bottom' : y),
+            width: width === canvas.offsetWidth ? '100%' : width,
+            height: height,
+            zIndex: element.style.zIndex
+        },
+        content: getDefaultContent(type)
+    };
+
+    canvasData.push(elementData);
+
+    const canvasInfo = document.querySelector('.canvas-info');
+    if (canvasInfo && canvasData.length > 0) {
+        canvasInfo.style.display = 'none';
+    }
+
+    console.log('Element oluşturuldu:', elementData);
+}
+
+
+
+// ===== VARSAYILAN İÇERİK OLUŞTUR ===== //
+
+function getDefaultContent(type) {
+    // Her element tipi için varsayılan içerik
+    const contents = {
+        'header': {
+            text: 'Site Başlığı',
+            style: 'default'
+        },
+        'footer': {
+            copyright: '© 2024 Test Builder',
+            links: []
+        },
+        'card': {
+            title: 'Card Title',
+            description: 'Card description',
+            image: null
+        },
+        'text-content': {
+            html: 'Text content here',
+            plainText: 'Text content here'
+        },
+        'slider': {
+            images: [],
+            autoplay: true,
+            interval: 3000
+        }
+    };
+
+    return contents[type] || {};
+}
+
+
+
+// ===== ELEMENT SAYISINI GÜNCELLE ===== //
+
+function updateElementCount() {
+    const countElement = document.getElementById('elementCount');
+    if (countElement) {
+        countElement.textContent = canvasData.length;
+    }
 }
