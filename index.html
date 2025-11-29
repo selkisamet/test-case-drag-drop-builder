@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Case - Drag & Drop Page Builder</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Elements</h2>
+
+            <div class="element-list">
+                <div class="element" draggable="true" data-type="header">
+                    <span>Header</span>
+                </div>
+
+                <div class="element" draggable="true" data-type="footer">
+                    <span>Footer</span>
+                </div>
+
+                <div class="element" draggable="true" data-type="card">
+                    <span>Card</span>
+                </div>
+
+                <div class="element" draggable="true" data-type="text-content">
+                    <span>Text Content</span>
+                </div>
+
+                <div class="element" draggable="true" data-type="slider">
+                    <span>Slider</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="exportBtn" class="export-btn">📥 Export JSON</button>
+                <div class="info">
+                    <small>Elements: <span id="elementCount">0</span></small>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Canvas -->
+        <main class="canvas" id="canvas">
+            <div class="canvas-info">
+                Drop elements here
+            </div>
+        </main>
+
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+
+</html>

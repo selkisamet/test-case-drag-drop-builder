@@ -1,0 +1,31 @@
+@use 'sass:color';
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// Sidebar
+.sidebar {
+  width: $sidebar-width;
+  background: $color-sidebar-bg;
+  color: $color-sidebar-text;
+  padding: $spacing-lg;
+  @include flex-column;
+  gap: $spacing-md;
+
+  .element-list {
+    flex: 1;
+    // overflow-y: auto;
+    @include flex-column;
+    gap: $spacing-sm;
+  }
+
+  .sidebar-footer {
+    border-top: 1px solid color.adjust($color-sidebar-text, $alpha: -0.8);
+    padding-top: $spacing-md;
+    @include flex-column;
+    gap: $spacing-sm;
+  }
+
+  .info {
+    text-align: center;
+  }
+}

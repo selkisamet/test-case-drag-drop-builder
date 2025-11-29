@@ -1,0 +1,28 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// Element component
+.element {
+  @include card;
+  padding: $spacing-sm;
+  cursor: grab;
+  user-select: none;
+  background-color: $color-secondary;
+
+  &:hover {
+    transform: translateX(4px);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.dragging {
+    opacity: 0.5;
+    cursor: grabbing !important;
+  }
+
+  span {
+    font-weight: 500;
+  }
+}

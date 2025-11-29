@@ -1,0 +1,45 @@
+@use 'variables' as *;
+
+// Flexbox mixin
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Card style mixin
+@mixin card {
+  background: $color-element;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  transition: all $transition-speed ease;
+}
+
+// Button mixin
+@mixin button {
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all $transition-speed ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+// Grid background mixin
+@mixin grid-background {
+  background-image:
+    linear-gradient(to right, $color-grid 1px, transparent 1px),
+    linear-gradient(to bottom, $color-grid 1px, transparent 1px);
+  background-size: $grid-size $grid-size;
+  border: 5px solid transparent;
+}

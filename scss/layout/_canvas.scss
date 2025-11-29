@@ -1,0 +1,29 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// Canvas
+.canvas {
+  flex: 1;
+  background: $color-canvas-bg;
+  position: relative;
+  overflow: auto;
+
+  &.grid-enabled {
+    @include grid-background;
+  }
+
+  &.drag-over {
+    border: 5px dashed $color-secondary;
+  }
+
+  .canvas-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #999;
+    font-size: 1.5rem;
+    pointer-events: none;
+    user-select: none;
+  }
+}

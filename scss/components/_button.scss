@@ -1,0 +1,15 @@
+@use 'sass:color';
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// Buttons
+.export-btn {
+  @include button;
+  width: 100%;
+  background: $color-primary;
+  color: white;
+
+  &:hover {
+    background: color.adjust($color-primary, $lightness: -10%);
+  }
+}
