@@ -2,7 +2,6 @@
 
 .canvas-element {
     position: absolute;
-    background-color: #3498db;
     color: white;
     border: 2px solid transparent;
     border-radius: 4px;
@@ -17,7 +16,11 @@
     user-select: none;
 
     &:hover {
-        border-color: #2980b9;
+        border: 5px dashed $color-selected-border;
+    }
+
+    &.selected {
+        border: 5px dashed $color-selected-border;
     }
 
     &[data-type="header"] {

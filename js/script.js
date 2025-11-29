@@ -90,45 +90,33 @@ function initializeDropZone(canvas) {
 // ===== TAŞMA KONTROL YAPISI ===== //
 
 function adjustPositionToFit(x, y, width, height, canvasWidth) {
-    // Element sağ taraftan taşacak mı kontrol et
     console.log('Pozisyon kontrolü:', { x, y, width, height, canvasWidth, willOverflow: x + width > canvasWidth });
 
     if (x + width > canvasWidth) {
-        // Önce sola kaydırmayı dene
         let newX = canvasWidth - width;
 
-        // Grid'e hizala
         if (GRID_SNAP) {
             newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
         }
 
-        // Negatif pozisyon olmaması için kontrol
         if (newX < 0) {
             newX = 0;
         }
 
         console.log('Sağdan taştı, sola kaydırılıyor:', newX);
 
-        // Sola kaydırınca çakışma var mı kontrol et
         if (!checkCollision(newX, y, width, height)) {
-            // Çakışma yok, sola kaydırılmış pozisyonu kullan
-            console.log('Sola kaydırıldı, çakışma yok');
             return { x: newX, y: y };
         } else {
-            // Sola kaydırınca da çakışma var, bir sonraki satıra geç
-            // Yeni satır pozisyonunu bul (mevcut y + grid hizalaması ile aşağıya in)
             let newY = y + height + GRID_SIZE;
 
             if (GRID_SNAP) {
                 newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
             }
 
-            // Soldan başlat
             newX = 0;
-
             console.log('Çakışma var, alt satıra geçiliyor:', { newX, newY });
 
-            // Yeni pozisyonda da çakışma kontrolü yap
             while (checkCollision(newX, newY, width, height)) {
                 newY += height + GRID_SIZE;
                 if (GRID_SNAP) {
@@ -167,7 +155,6 @@ function handleDrop(e) {
     let width = size.width === '100%' ? canvas.clientWidth : size.width;
     let height = size.height;
 
-    // Overflow kontrolü ve otomatik pozisyon düzeltme
     const adjustedPosition = adjustPositionToFit(mouseX, mouseY, width, height, canvas.clientWidth);
     mouseX = adjustedPosition.x;
     mouseY = adjustedPosition.y;
@@ -250,6 +237,13 @@ function createElement(type, x, y, width, height) {
 
     canvas.appendChild(element);
 
+    element.addEventListener('click', function (e) {
+        e.stopPropagation();
+        selectElement(element);
+    });
+
+    initializeElementDrag(element);
+
     const elementData = {
         id: elementId,
         type: type,
@@ -278,7 +272,6 @@ function createElement(type, x, y, width, height) {
 // ===== VARSAYILAN İÇERİK OLUŞTUR ===== //
 
 function getDefaultContent(type) {
-    // Her element tipi için varsayılan içerik
     const contents = {
         'header': {
             text: 'Site Başlığı',
@@ -315,5 +308,111 @@ function updateElementCount() {
     const countElement = document.getElementById('elementCount');
     if (countElement) {
         countElement.textContent = canvasData.length;
+    }
+}
+
+
+
+// ===== ELEMENT SEÇME ===== //
+
+function selectElement(element) {
+    if (selectedElement) {
+        selectedElement.classList.remove('selected');
+    }
+
+    selectedElement = element;
+    element.classList.add('selected');
+
+    console.log('Element seçildi:', element.id);
+}
+
+
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.canvas-element')) {
+        if (selectedElement) {
+            selectedElement.classList.remove('selected');
+            selectedElement = null;
+            console.log('Seçim kaldırıldı');
+        }
+    }
+});
+
+
+
+// ===== ELEMENT TAŞIMA (DRAG) ===== //
+
+function initializeElementDrag(element) {
+    let isDragging = false;
+    let startX, startY, elementX, elementY;
+
+    element.addEventListener('mousedown', function (e) {
+        isDragging = true;
+
+        const rect = element.getBoundingClientRect();
+        const canvas = document.getElementById('canvas');
+        const canvasRect = canvas.getBoundingClientRect();
+
+        startX = e.clientX;
+        startY = e.clientY;
+        elementX = rect.left - canvasRect.left;
+        elementY = rect.top - canvasRect.top;
+
+        element.style.cursor = 'grabbing';
+
+        console.log('Taşıma başladı:', { startX, startY, elementX, elementY });
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (!isDragging) return;
+
+        const canvas = document.getElementById('canvas');
+
+        let deltaX = e.clientX - startX;
+        let deltaY = e.clientY - startY;
+
+        let newX = elementX + deltaX;
+        let newY = elementY + deltaY;
+
+        if (GRID_SNAP) {
+            newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
+            newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+        }
+
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX + element.offsetWidth > canvas.offsetWidth) {
+            newX = canvas.offsetWidth - element.offsetWidth;
+        }
+        if (newY + element.offsetHeight > canvas.offsetHeight) {
+            newY = canvas.offsetHeight - element.offsetHeight;
+        }
+
+        if (!checkCollision(newX, newY, element.offsetWidth, element.offsetHeight, element)) {
+            element.style.left = newX + 'px';
+            element.style.top = newY + 'px';
+
+            updateElementData(element.id, { x: newX, y: newY });
+        }
+    });
+
+    document.addEventListener('mouseup', function () {
+        if (isDragging) {
+            isDragging = false;
+            element.style.cursor = 'move';
+            console.log('Taşıma bitti');
+        }
+    });
+}
+
+
+
+// ===== ELEMENT DATA'SINI GÜNCELLE ===== //
+
+function updateElementData(elementId, updates) {
+    const index = canvasData.findIndex(item => item.id === elementId);
+
+    if (index !== -1) {
+        Object.assign(canvasData[index].position, updates);
+        console.log('Element data güncellendi:', elementId, updates);
     }
 }
