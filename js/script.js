@@ -380,11 +380,23 @@ function initializeElementDrag(element) {
 
         if (newX < 0) newX = 0;
         if (newY < 0) newY = 0;
+
+        const maxX = canvas.offsetWidth - element.offsetWidth;
         if (newX + element.offsetWidth > canvas.offsetWidth) {
-            newX = canvas.offsetWidth - element.offsetWidth;
+            newX = maxX;
+            if (GRID_SNAP) {
+                newX = Math.floor(maxX / GRID_SIZE) * GRID_SIZE;
+            }
+            if (newX < 0) newX = 0;
         }
+
+        const maxY = canvas.offsetHeight - element.offsetHeight;
         if (newY + element.offsetHeight > canvas.offsetHeight) {
-            newY = canvas.offsetHeight - element.offsetHeight;
+            newY = maxY;
+            if (GRID_SNAP) {
+                newY = Math.floor(maxY / GRID_SIZE) * GRID_SIZE;
+            }
+            if (newY < 0) newY = 0;
         }
 
         if (!checkCollision(newX, newY, element.offsetWidth, element.offsetHeight, element)) {
