@@ -318,13 +318,15 @@ function updateElementCount() {
 function selectElement(element) {
     if (selectedElement) {
         selectedElement.classList.remove('selected');
-        removeResizeHandle(selectedElement);  // Resize handle'ı kaldır
+        removeResizeHandle(selectedElement);
+        removeZIndexControls(selectedElement);
     }
 
     selectedElement = element;
     element.classList.add('selected');
 
     addResizeHandle(element);
+    addZIndexControls(element);
 
     console.log('Element seçildi:', element.id);
 }
@@ -334,7 +336,8 @@ document.addEventListener('click', function (e) {
     if (!e.target.closest('.canvas-element')) {
         if (selectedElement) {
             selectedElement.classList.remove('selected');
-            removeResizeHandle(selectedElement);  // Resize handle'ı kaldır
+            removeResizeHandle(selectedElement);
+            removeZIndexControls(selectedElement);
             selectedElement = null;
             console.log('Seçim kaldırıldı');
         }
@@ -504,4 +507,66 @@ function removeResizeHandle(element) {
     if (handle) {
         handle.remove();
     }
+}
+
+
+
+// ===== Z-INDEX KONTROLLARI ===== //
+
+function addZIndexControls(element) {
+    const controls = document.createElement('div');
+    controls.className = 'z-controls';
+
+    const frontBtn = document.createElement('button');
+    frontBtn.textContent = '⬆ Front';
+    frontBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        bringToFront(element);
+    });
+
+    const backBtn = document.createElement('button');
+    backBtn.textContent = '⬇ Back';
+    backBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        sendToBack(element);
+    });
+
+    controls.appendChild(frontBtn);
+    controls.appendChild(backBtn);
+    element.appendChild(controls);
+}
+
+function removeZIndexControls(element) {
+    const controls = element.querySelector('.z-controls');
+    if (controls) {
+        controls.remove();
+    }
+}
+
+function bringToFront(element) {
+    const allZIndexes = canvasData.map(item => parseInt(item.position.zIndex));
+
+    const maxZ = Math.max(...allZIndexes);
+
+    const newZIndex = maxZ + 1;
+
+    element.style.zIndex = newZIndex;
+
+    updateElementData(element.id, { zIndex: newZIndex });
+
+    console.log('Element öne getirildi:', element.id, 'Z-Index:', newZIndex);
+}
+
+function sendToBack(element) {
+    const allZIndexes = canvasData.map(item => parseInt(item.position.zIndex));
+
+    const minZ = Math.min(...allZIndexes);
+
+    const newZIndex = minZ - 1;
+
+    element.style.zIndex = newZIndex;
+
+    updateElementData(element.id, { zIndex: newZIndex });
+
+    console.log('Element arkaya gönderildi:', element.id, 'Z-Index:', newZIndex);
 }
