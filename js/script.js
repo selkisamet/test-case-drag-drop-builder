@@ -16,16 +16,18 @@ const DEFAULT_SIZES = {
     'slider': { width: '100%', height: 400 }
 };
 
+
+
 document.addEventListener('DOMContentLoaded', function () {
     const canvas = document.getElementById('canvas');
     const exportBtn = document.getElementById('exportBtn');
     const elements = document.querySelectorAll('.sidebar .element');
 
     canvas.classList.add('grid-enabled');
+    initializeDragElements(elements);
+    initializeDropZone(canvas);
 
-    console.log('Canvas:', canvas);
-    console.log('Export Button:', exportBtn);
-    console.log('Elements:', elements);
+    document.addEventListener('keydown', handleKeyPress);
 });
 
 
@@ -50,16 +52,6 @@ function initializeDragElements(elements) {
         });
     });
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    const canvas = document.getElementById('canvas');
-    const exportBtn = document.getElementById('exportBtn');
-    const elements = document.querySelectorAll('.sidebar .element');
-
-    canvas.classList.add('grid-enabled');
-    initializeDragElements(elements);
-    initializeDropZone(canvas);
-});
 
 
 
@@ -569,4 +561,30 @@ function sendToBack(element) {
     updateElementData(element.id, { zIndex: newZIndex });
 
     console.log('Element arkaya gönderildi:', element.id, 'Z-Index:', newZIndex);
+}
+
+// ===== TC-004: DELETE TUŞU İLE SİLME ===== //
+
+function handleKeyPress(e) {
+    if (e.key === 'Delete' && selectedElement) {
+
+        const elementId = selectedElement.id;
+
+        selectedElement.remove();
+
+        canvasData = canvasData.filter(item => item.id !== elementId);
+
+        selectedElement = null;
+
+        updateElementCount();
+
+        if (canvasData.length === 0) {
+            const canvasInfo = document.querySelector('.canvas-info');
+            if (canvasInfo) {
+                canvasInfo.style.display = 'block';
+            }
+        }
+
+        console.log('Element silindi:', elementId);
+    }
 }
