@@ -15,6 +15,25 @@
     transition: border-color 0.2s ease;
     user-select: none;
 
+    .resize-handle {
+        width: 20px;
+        height: 20px;
+        background-color: #2196F3;
+        position: absolute;
+        right: -6px;
+        bottom: -6px;
+        cursor: se-resize;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+    }
+
+    .resize-handle:hover {
+        background-color: #1976D2;
+        transform: scale(1.2);
+    }
+
     &:hover {
         border: 5px dashed $color-selected-border;
     }

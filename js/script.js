@@ -318,10 +318,13 @@ function updateElementCount() {
 function selectElement(element) {
     if (selectedElement) {
         selectedElement.classList.remove('selected');
+        removeResizeHandle(selectedElement);  // Resize handle'ı kaldır
     }
 
     selectedElement = element;
     element.classList.add('selected');
+
+    addResizeHandle(element);
 
     console.log('Element seçildi:', element.id);
 }
@@ -331,6 +334,7 @@ document.addEventListener('click', function (e) {
     if (!e.target.closest('.canvas-element')) {
         if (selectedElement) {
             selectedElement.classList.remove('selected');
+            removeResizeHandle(selectedElement);  // Resize handle'ı kaldır
             selectedElement = null;
             console.log('Seçim kaldırıldı');
         }
@@ -426,5 +430,78 @@ function updateElementData(elementId, updates) {
     if (index !== -1) {
         Object.assign(canvasData[index].position, updates);
         console.log('Element data güncellendi:', elementId, updates);
+    }
+}
+
+
+
+// ===== ELEMENT RESIZE ===== //
+
+function addResizeHandle(element) {
+    if (element.dataset.type === 'header' ||
+        element.dataset.type === 'footer') {
+        return;
+    }
+
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    element.appendChild(handle);
+
+    let isResizing = false;
+    let startX, startWidth, startHeight, aspectRatio;
+
+    handle.addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+        isResizing = true;
+
+        startX = e.clientX;
+        startWidth = element.offsetWidth;
+        startHeight = element.offsetHeight;
+
+        aspectRatio = startWidth / startHeight;
+
+        console.log('Resize başladı:', {
+            startWidth,
+            startHeight,
+            aspectRatio
+        });
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (!isResizing) return;
+
+        let deltaX = e.clientX - startX;
+        let newWidth = startWidth + deltaX;
+        let newHeight = newWidth / aspectRatio;
+
+        if (newWidth < 100) newWidth = 100;
+        if (newHeight < 80) newHeight = 80;
+
+        if (GRID_SNAP) {
+            newWidth = Math.round(newWidth / GRID_SIZE) * GRID_SIZE;
+            newHeight = Math.round(newHeight / GRID_SIZE) * GRID_SIZE;
+        }
+
+        element.style.width = newWidth + 'px';
+        element.style.height = newHeight + 'px';
+
+        updateElementData(element.id, {
+            width: newWidth,
+            height: newHeight
+        });
+    });
+
+    document.addEventListener('mouseup', function () {
+        if (isResizing) {
+            isResizing = false;
+            console.log('Resize bitti');
+        }
+    });
+}
+
+function removeResizeHandle(element) {
+    const handle = element.querySelector('.resize-handle');
+    if (handle) {
+        handle.remove();
     }
 }
