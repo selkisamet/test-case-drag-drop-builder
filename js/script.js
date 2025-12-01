@@ -1,12 +1,16 @@
-// GLOBAL DEĞİŞKENLER
+// ===== GLOBAL DEĞİŞKENLER ===== //
 
-let elementCounter = 0;        // Her elemente benzersiz ID vermek için sayaç
-let selectedElement = null;    // Şu anda seçili olan element
-let canvasData = [];           // Tüm elementlerin bilgilerini tutan dizi
+let elementCounter = 0;
 
-// Grid ayarları
-const GRID_SIZE = 20;          // Grid kareleri 20px x 20px
-const GRID_SNAP = true;        // Grid'e otomatik hizalama açık
+let selectedElement = null;
+let canvasData = [];
+
+const GRID_SIZE = 20;
+const GRID_SNAP = true;
+
+
+
+// ===== ELEMENT TİPLERİ VARSAYILAN BOYUTLAR ===== //
 
 const DEFAULT_SIZES = {
     'header': { width: '100%', height: 80 },
@@ -18,16 +22,20 @@ const DEFAULT_SIZES = {
 
 
 
+// ===== DOM HAZIR OLDUĞUNDA ===== //
+
 document.addEventListener('DOMContentLoaded', function () {
     const canvas = document.getElementById('canvas');
     const exportBtn = document.getElementById('exportBtn');
     const elements = document.querySelectorAll('.sidebar .element');
 
     canvas.classList.add('grid-enabled');
+
     initializeDragElements(elements);
     initializeDropZone(canvas);
 
     document.addEventListener('keydown', handleKeyPress);
+    exportBtn.addEventListener('click', exportJSON);
 
     document.addEventListener('click', function (e) {
         if (!e.target.closest('.canvas-element')) {
@@ -39,23 +47,19 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
-
-    exportBtn.addEventListener('click', exportJSON);
 });
 
 
 
-// ===== ELEMENT SÜRÜKLEME BAŞLATMA ===== //
+// ===== DRAG & DROP ===== //
 
 function initializeDragElements(elements) {
     elements.forEach(element => {
-
         element.addEventListener('dragstart', function (e) {
-            e.dataTransfer.setData('text/plain', this.dataset.type);
 
+            e.dataTransfer.setData('text/plain', this.dataset.type);
             e.dataTransfer.effectAllowed = 'copy';
             this.classList.add('dragging');
-
             this.style.cursor = 'grabbing';
         });
 
@@ -66,12 +70,7 @@ function initializeDragElements(elements) {
     });
 }
 
-
-
-// ===== DROP ZONE ALGILAMA ===== //
-
 function initializeDropZone(canvas) {
-
     canvas.addEventListener('dragover', function (e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'copy';
@@ -85,84 +84,41 @@ function initializeDropZone(canvas) {
     canvas.addEventListener('drop', function (e) {
         e.preventDefault();
         canvas.classList.remove('drag-over');
-
-        handleDrop(e)
+        handleDrop(e);
     });
 }
 
 
 
-// ===== TAŞMA KONTROL YAPISI ===== //
-
-function adjustPositionToFit(x, y, width, height, canvasWidth) {
-    console.log('Pozisyon kontrolü:', { x, y, width, height, canvasWidth, willOverflow: x + width > canvasWidth });
-
-    if (x + width > canvasWidth) {
-        let newX = canvasWidth - width;
-
-        if (GRID_SNAP) {
-            newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
-        }
-
-        if (newX < 0) {
-            newX = 0;
-        }
-
-        console.log('Sağdan taştı, sola kaydırılıyor:', newX);
-
-        if (!checkCollision(newX, y, width, height)) {
-            return { x: newX, y: y };
-        } else {
-            let newY = y + height + GRID_SIZE;
-
-            if (GRID_SNAP) {
-                newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
-            }
-
-            newX = 0;
-            console.log('Çakışma var, alt satıra geçiliyor:', { newX, newY });
-
-            while (checkCollision(newX, newY, width, height)) {
-                newY += height + GRID_SIZE;
-                if (GRID_SNAP) {
-                    newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
-                }
-            }
-
-            return { x: newX, y: newY };
-        }
-    }
-
-    return { x: x, y: y };
-}
-
-
-
-// ===== ELEMENT YERLEŞTIRME VE POZİSYON HESAPLAMA ===== //
+// ===== ELEMENT YERLEŞTIRME ===== //
 
 function handleDrop(e) {
     const type = e.dataTransfer.getData('text/plain');
-
     const canvas = document.getElementById('canvas');
     const canvasRect = canvas.getBoundingClientRect();
 
-
-    let mouseX = e.clientX - canvasRect.left;
     let mouseY = e.clientY - canvasRect.top;
+    let mouseX = e.clientX - canvasRect.left;
+
 
     if (GRID_SNAP) {
-        mouseX = Math.round(mouseX / GRID_SIZE) * GRID_SIZE;
         mouseY = Math.round(mouseY / GRID_SIZE) * GRID_SIZE;
+        mouseX = Math.round(mouseX / GRID_SIZE) * GRID_SIZE;
     }
 
     const size = DEFAULT_SIZES[type];
-
     let width = size.width === '100%' ? canvas.clientWidth : size.width;
     let height = size.height;
 
-    const adjustedPosition = adjustPositionToFit(mouseX, mouseY, width, height, canvas.clientWidth);
-    mouseX = adjustedPosition.x;
-    mouseY = adjustedPosition.y;
+    if (mouseX + width > canvas.clientWidth) {
+        mouseX = canvas.clientWidth - width;
+
+        if (GRID_SNAP) {
+            mouseX = Math.round(mouseX / GRID_SIZE) * GRID_SIZE;
+        }
+
+        if (mouseX < 0) mouseX = 0;
+    }
 
     if (checkCollision(mouseX, mouseY, width, height)) {
         alert('Bu pozisyonda başka bir element var!');
@@ -192,7 +148,10 @@ function checkCollision(x, y, width, height, ignoreElement = null) {
         const elWidth = rect.width;
         const elHeight = rect.height;
 
-        if (x < elX + elWidth && x + width > elX && y < elY + elHeight && y + height > elY) {
+        if (x < elX + elWidth &&
+            x + width > elX &&
+            y < elY + elHeight &&
+            y + height > elY) {
             return true;
         }
     }
@@ -206,8 +165,8 @@ function checkCollision(x, y, width, height, ignoreElement = null) {
 
 function createElement(type, x, y, width, height) {
     const canvas = document.getElementById('canvas');
-
     elementCounter++;
+
     const elementId = `elem_${type}_${String(elementCounter).padStart(3, '0')}`;
 
     const element = document.createElement('div');
@@ -222,15 +181,13 @@ function createElement(type, x, y, width, height) {
         element.style.left = '0px';
         element.style.width = '100%';
         element.style.height = height + 'px';
-    }
-    else if (type === 'footer') {
+    } else if (type === 'footer') {
         element.style.position = 'absolute';
         element.style.bottom = '0px';
         element.style.left = '0px';
         element.style.width = '100%';
         element.style.height = height + 'px';
-    }
-    else {
+    } else {
         element.style.position = 'absolute';
         element.style.left = x + 'px';
         element.style.top = y + 'px';
@@ -270,42 +227,16 @@ function createElement(type, x, y, width, height) {
     }
 }
 
-
-
-// ===== VARSAYILAN İÇERİK OLUŞTUR ===== //
-
 function getDefaultContent(type) {
     const contents = {
-        'header': {
-            text: 'Site Başlığı',
-            style: 'default'
-        },
-        'footer': {
-            copyright: '© 2024 Test Builder',
-            links: []
-        },
-        'card': {
-            title: 'Card Title',
-            description: 'Card description',
-            image: null
-        },
-        'text-content': {
-            html: 'Text content here',
-            plainText: 'Text content here'
-        },
-        'slider': {
-            images: [],
-            autoplay: true,
-            interval: 3000
-        }
+        'header': { text: 'Site Başlığı', style: 'default' },
+        'footer': { copyright: '© 2024 Test Builder', links: [] },
+        'card': { title: 'Card Title', description: 'Card description', image: null },
+        'text-content': { html: 'Text content here', plainText: 'Text content here' },
+        'slider': { images: [], autoplay: true, interval: 3000 }
     };
-
     return contents[type] || {};
 }
-
-
-
-// ===== ELEMENT SAYISINI GÜNCELLE ===== //
 
 function updateElementCount() {
     const countElement = document.getElementById('elementCount');
@@ -334,13 +265,18 @@ function selectElement(element) {
 
 
 
-// ===== ELEMENT TAŞIMA (DRAG) ===== //
+// ===== ELEMENT TAŞIMA ===== //
 
 function initializeElementDrag(element) {
     let isDragging = false;
     let startX, startY, elementX, elementY;
 
     element.addEventListener('mousedown', function (e) {
+        if (e.target.classList.contains('resize-handle') ||
+            e.target.closest('.z-controls')) {
+            return;
+        }
+
         isDragging = true;
 
         const rect = element.getBoundingClientRect();
@@ -375,27 +311,20 @@ function initializeElementDrag(element) {
         if (newY < 0) newY = 0;
 
         const maxX = canvas.offsetWidth - element.offsetWidth;
-        if (newX + element.offsetWidth > canvas.offsetWidth) {
-            newX = maxX;
-            if (GRID_SNAP) {
-                newX = Math.floor(maxX / GRID_SIZE) * GRID_SIZE;
-            }
+        if (newX > maxX) {
+            newX = GRID_SNAP ? Math.floor(maxX / GRID_SIZE) * GRID_SIZE : maxX;
             if (newX < 0) newX = 0;
         }
 
         const maxY = canvas.offsetHeight - element.offsetHeight;
-        if (newY + element.offsetHeight > canvas.offsetHeight) {
-            newY = maxY;
-            if (GRID_SNAP) {
-                newY = Math.floor(maxY / GRID_SIZE) * GRID_SIZE;
-            }
+        if (newY > maxY) {
+            newY = GRID_SNAP ? Math.floor(maxY / GRID_SIZE) * GRID_SIZE : maxY;
             if (newY < 0) newY = 0;
         }
 
         if (!checkCollision(newX, newY, element.offsetWidth, element.offsetHeight, element)) {
             element.style.left = newX + 'px';
             element.style.top = newY + 'px';
-
             updateElementData(element.id, { x: newX, y: newY });
         }
     });
@@ -408,13 +337,8 @@ function initializeElementDrag(element) {
     });
 }
 
-
-
-// ===== ELEMENT DATA'SINI GÜNCELLE ===== //
-
 function updateElementData(elementId, updates) {
     const index = canvasData.findIndex(item => item.id === elementId);
-
     if (index !== -1) {
         Object.assign(canvasData[index].position, updates);
     }
@@ -425,8 +349,7 @@ function updateElementData(elementId, updates) {
 // ===== ELEMENT RESIZE ===== //
 
 function addResizeHandle(element) {
-    if (element.dataset.type === 'header' ||
-        element.dataset.type === 'footer') {
+    if (element.dataset.type === 'header' || element.dataset.type === 'footer') {
         return;
     }
 
@@ -444,7 +367,6 @@ function addResizeHandle(element) {
         startX = e.clientX;
         startWidth = element.offsetWidth;
         startHeight = element.offsetHeight;
-
         aspectRatio = startWidth / startHeight;
     });
 
@@ -466,29 +388,22 @@ function addResizeHandle(element) {
         element.style.width = newWidth + 'px';
         element.style.height = newHeight + 'px';
 
-        updateElementData(element.id, {
-            width: newWidth,
-            height: newHeight
-        });
+        updateElementData(element.id, { width: newWidth, height: newHeight });
     });
 
     document.addEventListener('mouseup', function () {
-        if (isResizing) {
-            isResizing = false;
-        }
+        isResizing = false;
     });
 }
 
 function removeResizeHandle(element) {
     const handle = element.querySelector('.resize-handle');
-    if (handle) {
-        handle.remove();
-    }
+    if (handle) handle.remove();
 }
 
 
 
-// ===== Z-INDEX KONTROLLARI ===== //
+// ===== Z-INDEX KONTROLÜ ===== //
 
 function addZIndexControls(element) {
     const controls = document.createElement('div');
@@ -515,57 +430,42 @@ function addZIndexControls(element) {
 
 function removeZIndexControls(element) {
     const controls = element.querySelector('.z-controls');
-    if (controls) {
-        controls.remove();
-    }
+    if (controls) controls.remove();
 }
 
 function bringToFront(element) {
-    const allZIndexes = canvasData.map(item => parseInt(item.position.zIndex));
-
-    const maxZ = Math.max(...allZIndexes);
-
+    const maxZ = Math.max(...canvasData.map(item => parseInt(item.position.zIndex)));
     const newZIndex = maxZ + 1;
 
     element.style.zIndex = newZIndex;
-
     updateElementData(element.id, { zIndex: newZIndex });
 }
 
 function sendToBack(element) {
-    const allZIndexes = canvasData.map(item => parseInt(item.position.zIndex));
-
-    const minZ = Math.min(...allZIndexes);
-
+    const minZ = Math.min(...canvasData.map(item => parseInt(item.position.zIndex)));
     const newZIndex = minZ - 1;
 
     element.style.zIndex = newZIndex;
-
     updateElementData(element.id, { zIndex: newZIndex });
 }
 
 
 
-// ===== DELETE TUŞU İLE SİLME ===== //
+// ===== DELETE ===== //
 
 function handleKeyPress(e) {
     if (e.key === 'Delete' && selectedElement) {
-
         const elementId = selectedElement.id;
 
         selectedElement.remove();
-
         canvasData = canvasData.filter(item => item.id !== elementId);
-
         selectedElement = null;
 
         updateElementCount();
 
         if (canvasData.length === 0) {
             const canvasInfo = document.querySelector('.canvas-info');
-            if (canvasInfo) {
-                canvasInfo.style.display = 'block';
-            }
+            if (canvasInfo) canvasInfo.style.display = 'block';
         }
     }
 }
@@ -598,34 +498,28 @@ function exportJSON() {
                 snap: GRID_SNAP
             }
         },
-        elements: canvasData.map(item => {
-            return {
-                id: item.id,
-                type: item.type,
-                content: item.content,
-                position: {
-                    x: item.position.x,
-                    y: item.position.y,
-                    width: item.position.width,
-                    height: item.position.height,
-                    zIndex: parseInt(item.position.zIndex)
+        elements: canvasData.map(item => ({
+            id: item.id,
+            type: item.type,
+            content: item.content,
+            position: {
+                x: item.position.x,
+                y: item.position.y,
+                width: item.position.width,
+                height: item.position.height,
+                zIndex: parseInt(item.position.zIndex)
+            },
+            responsive: {
+                mobile: {
+                    width: item.position.width === '100%' ? '100%' : 'calc(100% - 20px)',
+                    height: Math.floor(item.position.height * 0.8)
                 },
-                responsive: {
-                    mobile: {
-                        width: item.position.width === '100%'
-                            ? '100%'
-                            : 'calc(100% - 20px)',
-                        height: Math.floor(item.position.height * 0.8)
-                    },
-                    tablet: {
-                        width: item.position.width === '100%'
-                            ? '100%'
-                            : Math.floor(item.position.width * 0.9),
-                        height: Math.floor(item.position.height * 0.9)
-                    }
+                tablet: {
+                    width: item.position.width === '100%' ? '100%' : Math.floor(item.position.width * 0.9),
+                    height: Math.floor(item.position.height * 0.9)
                 }
-            };
-        }),
+            }
+        })),
         metadata: {
             totalElements: canvasData.length,
             exportFormat: 'json',
@@ -645,5 +539,5 @@ function exportJSON() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    alert('JSON başarıyla export edildi!');
+    alert('✅ JSON başarıyla export edildi!');
 }
