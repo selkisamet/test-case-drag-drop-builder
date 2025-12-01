@@ -1,0 +1,1 @@
+Projeyi geliştirirken herhangi bir framework kullanmadım - JavaScript becerilerimi daha net gösterebilmeniz için vanilla JavaScript ile yazdım. Stillendirme tarafında ise SCSS ön işlemcisini tercih ettim. Proje yapısını mümkün olduğunca sade ve anlaşılır tutmaya çalıştım.
