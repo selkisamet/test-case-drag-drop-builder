@@ -29,6 +29,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('keydown', handleKeyPress);
 
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.canvas-element')) {
+            if (selectedElement) {
+                selectedElement.classList.remove('selected');
+                removeResizeHandle(selectedElement);
+                removeZIndexControls(selectedElement);
+                selectedElement = null;
+            }
+        }
+    });
+
     exportBtn.addEventListener('click', exportJSON);
 });
 
@@ -320,18 +331,6 @@ function selectElement(element) {
     addResizeHandle(element);
     addZIndexControls(element);
 }
-
-
-document.addEventListener('click', function (e) {
-    if (!e.target.closest('.canvas-element')) {
-        if (selectedElement) {
-            selectedElement.classList.remove('selected');
-            removeResizeHandle(selectedElement);
-            removeZIndexControls(selectedElement);
-            selectedElement = null;
-        }
-    }
-});
 
 
 
