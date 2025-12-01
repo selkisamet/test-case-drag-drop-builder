@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeDropZone(canvas);
 
     document.addEventListener('keydown', handleKeyPress);
+
+    exportBtn.addEventListener('click', exportJSON);
 });
 
 
@@ -255,8 +257,6 @@ function createElement(type, x, y, width, height) {
     if (canvasInfo && canvasData.length > 0) {
         canvasInfo.style.display = 'none';
     }
-
-    console.log('Element oluşturuldu:', elementData);
 }
 
 
@@ -319,8 +319,6 @@ function selectElement(element) {
 
     addResizeHandle(element);
     addZIndexControls(element);
-
-    console.log('Element seçildi:', element.id);
 }
 
 
@@ -331,7 +329,6 @@ document.addEventListener('click', function (e) {
             removeResizeHandle(selectedElement);
             removeZIndexControls(selectedElement);
             selectedElement = null;
-            console.log('Seçim kaldırıldı');
         }
     }
 });
@@ -357,8 +354,6 @@ function initializeElementDrag(element) {
         elementY = rect.top - canvasRect.top;
 
         element.style.cursor = 'grabbing';
-
-        console.log('Taşıma başladı:', { startX, startY, elementX, elementY });
     });
 
     document.addEventListener('mousemove', function (e) {
@@ -410,7 +405,6 @@ function initializeElementDrag(element) {
         if (isDragging) {
             isDragging = false;
             element.style.cursor = 'move';
-            console.log('Taşıma bitti');
         }
     });
 }
@@ -424,7 +418,6 @@ function updateElementData(elementId, updates) {
 
     if (index !== -1) {
         Object.assign(canvasData[index].position, updates);
-        console.log('Element data güncellendi:', elementId, updates);
     }
 }
 
@@ -454,12 +447,6 @@ function addResizeHandle(element) {
         startHeight = element.offsetHeight;
 
         aspectRatio = startWidth / startHeight;
-
-        console.log('Resize başladı:', {
-            startWidth,
-            startHeight,
-            aspectRatio
-        });
     });
 
     document.addEventListener('mousemove', function (e) {
@@ -489,7 +476,6 @@ function addResizeHandle(element) {
     document.addEventListener('mouseup', function () {
         if (isResizing) {
             isResizing = false;
-            console.log('Resize bitti');
         }
     });
 }
@@ -545,8 +531,6 @@ function bringToFront(element) {
     element.style.zIndex = newZIndex;
 
     updateElementData(element.id, { zIndex: newZIndex });
-
-    console.log('Element öne getirildi:', element.id, 'Z-Index:', newZIndex);
 }
 
 function sendToBack(element) {
@@ -559,11 +543,11 @@ function sendToBack(element) {
     element.style.zIndex = newZIndex;
 
     updateElementData(element.id, { zIndex: newZIndex });
-
-    console.log('Element arkaya gönderildi:', element.id, 'Z-Index:', newZIndex);
 }
 
-// ===== TC-004: DELETE TUŞU İLE SİLME ===== //
+
+
+// ===== DELETE TUŞU İLE SİLME ===== //
 
 function handleKeyPress(e) {
     if (e.key === 'Delete' && selectedElement) {
@@ -584,7 +568,83 @@ function handleKeyPress(e) {
                 canvasInfo.style.display = 'block';
             }
         }
-
-        console.log('Element silindi:', elementId);
     }
+}
+
+
+
+// ===== JSON EXPORT ===== //
+
+function exportJSON() {
+    if (canvasData.length === 0) {
+        alert('⚠️ Canvas boş! Önce element ekleyin.');
+        return;
+    }
+
+    const canvas = document.getElementById('canvas');
+
+    const exportData = {
+        project: {
+            name: 'Test Builder Layout',
+            version: '1.0',
+            created: new Date().toISOString(),
+            lastModified: new Date().toISOString()
+        },
+        canvas: {
+            width: canvas.offsetWidth,
+            height: canvas.offsetHeight,
+            grid: {
+                enabled: true,
+                size: GRID_SIZE,
+                snap: GRID_SNAP
+            }
+        },
+        elements: canvasData.map(item => {
+            return {
+                id: item.id,
+                type: item.type,
+                content: item.content,
+                position: {
+                    x: item.position.x,
+                    y: item.position.y,
+                    width: item.position.width,
+                    height: item.position.height,
+                    zIndex: parseInt(item.position.zIndex)
+                },
+                responsive: {
+                    mobile: {
+                        width: item.position.width === '100%'
+                            ? '100%'
+                            : 'calc(100% - 20px)',
+                        height: Math.floor(item.position.height * 0.8)
+                    },
+                    tablet: {
+                        width: item.position.width === '100%'
+                            ? '100%'
+                            : Math.floor(item.position.width * 0.9),
+                        height: Math.floor(item.position.height * 0.9)
+                    }
+                }
+            };
+        }),
+        metadata: {
+            totalElements: canvasData.length,
+            exportFormat: 'json',
+            exportDate: new Date().toISOString()
+        }
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `test-builder-export-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert('JSON başarıyla export edildi!');
 }
